@@ -11,12 +11,16 @@ import os, psycopg2
 from werkzeug.utils import secure_filename
 from app.models import Movie
 from .forms import MovieForm
-
 from datetime import datetime
+from flask_wtf.csrf import generate_csrf
 
 ###
 # Routing for your application.
 ###
+
+@app.route('/api/v1/csrf-token', methods=['GET'])
+def get_csrf():
+    return jsonify({'csrf_token': generate_csrf()})
 
 @app.route('/')
 def index():
@@ -28,6 +32,7 @@ def movies():
 
     if formObj.validate_on_submit():
         res = request.form
+        # print("Tadaa!")
 
         #HANDLE IMAGE DATA
         image_file = formObj.poster.data
@@ -62,15 +67,17 @@ def movies():
 
         msg = {
                 "message": "Movie Successfully added",
-                "title": res['title']
+                "title": res['title'],
                 "poster": filename,
                 "description": res['description']
               }
     
-        return jsonify(message= msg)
+        return jsonify(msg)
     
-    elif !formObj.validate_on_submit:        
-        return jsonify(message=form_errors(formObj))
+    else:       
+        
+        errors = form_errors(formObj)
+        return jsonify({'errors' : errors})
         
 
 ###
