@@ -78,6 +78,31 @@ def movies():
         
         errors = form_errors(formObj)
         return jsonify({'errors' : errors})
+
+@app.route('/api/v1/movies/<uploaddir>/<filename>')
+def get_movie(uploaddir,filename):
+    uploads_dir = app.config['UPLOAD_FOLDER']
+    return send_from_directory(os.path.join(os.getcwd(),uploads_dir), filename)
+
+@app.route('/api/v1/movies', methods=['GET'])
+def list_movies():
+    uploads_dir = app.config['UPLOAD_FOLDER']
+    posters = get_posters()
+
+    movies = Movie.query.all()
+
+    runningOutOfVariableNamesToDescribeMovies = []
+    for mov in movies:
+        runningOutOfVariableNamesToDescribeMovies.append({
+            'id': mov.id,
+            'title': mov.title,
+            'description': mov.description,
+            'poster': "/api/v1/posters/" + str(mov.poster_url)
+        })
+        print(mov.poster_url)
+
+    return jsonify({'movies': runningOutOfVariableNamesToDescribeMovies})
+
         
 
 ###
@@ -122,3 +147,13 @@ def add_header(response):
 def page_not_found(error):
     """Custom 404 page."""
     return render_template('404.html'), 404
+
+#HELPER FUNCTIONS
+def get_posters():
+    uploadDir = app.config['UPLOAD_FOLDER']
+    lst = []
+    for root, dirs, files in os.walk(uploadDir):
+        for file in files:
+            if file.endswith(('.jpg', '.jpeg', '.png', '.jfif', '.webp')):
+                lst.append(os.path.join(root, file))
+    return lst
