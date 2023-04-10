@@ -5,10 +5,14 @@ Werkzeug Documentation:  https://werkzeug.palletsprojects.com/
 This file creates your application.
 """
 
-from app import app
+from app import app, db
 from flask import render_template, request, jsonify, send_file
-import os
+import os, psycopg2
+from werkzeug.utils import secure_filename
+from app.models import Movie
+from .forms import MovieForm
 
+from datetime import datetime
 
 ###
 # Routing for your application.
@@ -18,6 +22,56 @@ import os
 def index():
     return jsonify(message="This is the beginning of our API")
 
+@app.route('/api/v1/movies', methods=['POST'])
+def movies():
+    formObj = MovieForm()
+
+    if formObj.validate_on_submit():
+        res = request.form
+
+        #HANDLE IMAGE DATA
+        image_file = formObj.poster.data
+        filename = secure_filename(image_file.filename)
+        image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        image_file.save(image_path)
+        
+        #HANDLE FORM INPUTS
+        conn = psycopg2.connect(
+            host="localhost",
+            database="lab5",
+            user=os.environ.get('DATABASE_USERNAME', 'postgres'),
+            password= os.environ.get('DATABASE_PASSWORD')
+        )
+        cur = conn.cursor()
+
+        movie_data = {
+            'title': res['title'],
+            'description': res['description'],
+            'poster_url': str(image_path),
+            'created_at': str(datetime.now())
+        }
+
+        cur.execute("""
+            INSERT INTO movies (title, description, poster_url, created_at)
+            VALUES (%(title)s, %(description)s, %(poster_url)s, %(created_at)s);
+        """, movie_data)
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        msg = {
+                "message": "Movie Successfully added",
+                "title": res['title']
+                "poster": filename,
+                "description": res['description']
+              }
+    
+        return jsonify(message= msg)
+    
+    elif !formObj.validate_on_submit:        
+        return jsonify(message=form_errors(formObj))
+        
 
 ###
 # The functions below should be applicable to all Flask apps.
