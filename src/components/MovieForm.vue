@@ -1,4 +1,12 @@
 <template>
+    <div v-if="success" class="alert alert-success" role="alert">
+        {{ success }}
+    </div>
+    <div v-if="errors.length" class="alert alert-danger" role="alert">
+        <ul>
+            <li v-for="error in errors" :key="error">{{ error }}</li>
+        </ul>
+    </div>
     <form @submit.prevent="saveMovie" id="movieForm">
         <div class="form-group mb-3">
             <label for="title" class="form-label">Movie Title</label>
@@ -31,28 +39,38 @@
             .then((data) => {
                 console.log(data);
                 csrf_token.value = data.csrf_token;
-            })
+            });
     }
-    // const title = ref('');
-    // const description = ref('');
-    // const poster = ref('');
-    function saveMovie(){
+    const title = ref('');
+    const description = ref('');
+    const success = ref("");
+    const errors = ref([]);
+    function saveMovie() {
         let uploadForm = document.querySelector("#movieForm")
         let formData = new FormData(uploadForm)
         fetch("/api/v1/movies", {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': csrf_token.value
-            }
-        })
-        .then(function (response) {
-            return response.json();
-        })
-        .then(function (data) {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrf_token.value
+                }
+            })
+            .then(function(response) {
+                return response.json();
+            })
+        .then(function(data) {
             console.log(data);
+            if (!data.errors) {
+                    success.value = "Movie Successfully Added";
+                    errors.value = [];
+                    title.value = "";
+                    description.value = "";
+                } else {
+                        errors.value = data.errors;
+                        success.value = "";
+                }
         })
-        .catch(function (error) {
+        .catch(function(error) {
             console.log(error);
         });
     }
