@@ -60,7 +60,7 @@
         .then(function(data) {
             console.log(data);
             if (!data.errors) {
-                    success.value = "Movie Successfully Added";
+                    success.value = "File Upload Successful";
                     errors.value = [];
                 } else {
                         errors.value = data.errors;
