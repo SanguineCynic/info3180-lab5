@@ -41,10 +41,9 @@
                 csrf_token.value = data.csrf_token;
             });
     }
-    const title = ref('');
-    const description = ref('');
-    const success = ref("");
-    const errors = ref([]);
+
+    let success = ref("");
+    let errors = ref([]);
     function saveMovie() {
         let uploadForm = document.querySelector("#movieForm")
         let formData = new FormData(uploadForm)
@@ -63,8 +62,6 @@
             if (!data.errors) {
                     success.value = "Movie Successfully Added";
                     errors.value = [];
-                    title.value = "";
-                    description.value = "";
                 } else {
                         errors.value = data.errors;
                         success.value = "";
